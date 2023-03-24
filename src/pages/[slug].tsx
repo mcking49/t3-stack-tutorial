@@ -13,6 +13,9 @@ import { prisma } from "@/server/db";
 import superjson from "superjson";
 import { PageLayout } from "@/components/layout";
 import Image from "next/image";
+import { type FC } from "react";
+import { LoadingPage } from "@/components/loading";
+import { PostView } from "@/components/post-view";
 
 export const getStaticProps: GetStaticProps<{ username: string }> = async (
   context
@@ -46,6 +49,23 @@ export const getStaticPaths: GetStaticPaths = () => {
   };
 };
 
+const ProfileFeed: FC<{ userId: string }> = ({ userId }) => {
+  const { data, isLoading } = api.posts.getByAuthorId.useQuery({
+    authorId: userId,
+  });
+
+  if (isLoading) return <LoadingPage />;
+  if (!data || !data.length) return <div>User has not posted</div>;
+
+  return (
+    <div className="flex flex-col">
+      {data.map(({ post, author }) => (
+        <PostView key={post.id} post={post} author={author} />
+      ))}
+    </div>
+  );
+};
+
 type PageProps = InferGetStaticPropsType<typeof getStaticProps>;
 
 const ProfilePage: NextPage<PageProps> = ({ username }) => {
@@ -77,6 +97,7 @@ const ProfilePage: NextPage<PageProps> = ({ username }) => {
             <div className="text-2xl font-bold">{`@${username}`}</div>
           </div>
           <div className="w-full border-b border-slate-400" />
+          <ProfileFeed userId={data.id} />
         </div>
       </PageLayout>
     </>
