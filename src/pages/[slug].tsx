@@ -1,30 +1,23 @@
 import { api } from "@/utils/api";
 import {
-  type InferGetStaticPropsType,
   type GetStaticPaths,
   type GetStaticProps,
+  type InferGetStaticPropsType,
   type NextPage,
 } from "next";
 import Head from "next/head";
 
-import { createProxySSGHelpers } from "@trpc/react-query/ssg";
-import { appRouter } from "@/server/api/root";
-import { prisma } from "@/server/db";
-import superjson from "superjson";
 import { PageLayout } from "@/components/layout";
-import Image from "next/image";
-import { type FC } from "react";
 import { LoadingPage } from "@/components/loading";
 import { PostView } from "@/components/post-view";
+import { generateSSGHelper } from "@/server/helpers/ssgHelper";
+import Image from "next/image";
+import { type FC } from "react";
 
 export const getStaticProps: GetStaticProps<{ username: string }> = async (
   context
 ) => {
-  const ssg = createProxySSGHelpers({
-    router: appRouter,
-    ctx: { prisma, userId: null },
-    transformer: superjson,
-  });
+  const ssg = generateSSGHelper();
 
   const slug = context.params?.slug;
 
