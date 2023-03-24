@@ -3,7 +3,7 @@ import {
   privateProcedure,
   publicProcedure,
 } from "@/server/api/trpc";
-import { type User } from "@clerk/nextjs/dist/api";
+import { filterUserForClient } from "@/server/helpers/filterUserForClient";
 import { clerkClient } from "@clerk/nextjs/server";
 import { TRPCError } from "@trpc/server";
 import { Ratelimit } from "@upstash/ratelimit";
@@ -17,14 +17,6 @@ const ratelimit = new Ratelimit({
   analytics: true,
 });
 
-const userFilterForClient = (user: User) => {
-  return {
-    id: user.id,
-    username: user.username,
-    profileImageUrl: user.profileImageUrl,
-  };
-};
-
 export const postsRouter = createTRPCRouter({
   getAll: publicProcedure.query(async ({ ctx }) => {
     const posts = await ctx.prisma.post.findMany({
@@ -37,7 +29,7 @@ export const postsRouter = createTRPCRouter({
         userId: posts.map((post) => post.authorId),
         limit: 100,
       })
-    ).map(userFilterForClient);
+    ).map(filterUserForClient);
 
     return posts.map((post) => {
       const author = users.find((user) => user.id === post.authorId);
